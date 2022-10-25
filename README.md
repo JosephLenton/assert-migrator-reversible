@@ -1,6 +1,6 @@
-Sea Orm Reversible Migrtion Test
-================================
+Sea Orm Reversible Migration Test
+=================================
 
-A crate for testing if your migrations are reversible or not.
+A crate for testing if your Migrators can reliably go up and down.
 
-tl;dr; It runs your migrations up one at a time, then down one at a time. Checking if they really do work forwards and backwards.
+It runs your migrations up and down one at a time. Taking a look at the differences it does to a database. Checking if the reverse returns a database into it's previous state.
