@@ -1,4 +1,5 @@
 use ::sea_orm_migration::prelude::MigratorTrait;
+use ::tokio::runtime::Builder;
 
 use crate::queries::get_table_schemas;
 use crate::queries::new_test_db_connection;
@@ -12,11 +13,21 @@ use crate::queries::TableSchema;
 ///
 /// Note for performance reasons, this works in reverse order of migrations.
 ///
-pub async fn assert_migrator_is_reversible<M>(migrator: M)
+pub fn assert_migrator_is_reversible<M>(migrator: M)
 where
     M: MigratorTrait,
 {
-    let maybe_index = find_index_of_non_reversible_migration(migrator).await;
+    Builder::new_current_thread()
+        .build()
+        .expect("Expect to be able to start Tokio runtime for testing")
+        .block_on(async move { assert_migrator_is_reversible_async(migrator).await });
+}
+
+pub async fn assert_migrator_is_reversible_async<M>(migrator: M)
+where
+    M: MigratorTrait,
+{
+    let maybe_index = find_index_of_non_reversible_migration_async(migrator).await;
     if let Some(index) = maybe_index {
         panic!("Migration at index {} is not reversible", index);
     }
@@ -39,7 +50,20 @@ where
  *  - This results in searching in reverse order.
  *
  */
-pub async fn find_index_of_non_reversible_migration<M>(_migrator: M) -> Option<usize>
+pub fn find_index_of_non_reversible_migration<M>(migrator: M) -> Option<usize>
+where
+    M: MigratorTrait,
+{
+    Builder::new_current_thread()
+        .build()
+        .expect("Expect to be able to start Tokio runtime for testing")
+        .block_on(async move { find_index_of_non_reversible_migration_async(migrator).await })
+}
+
+/// This is an `async` version of `find_index_of_non_reversible_migration`.
+///
+/// This is useful if you have your own async runtime that you wish for this to use.
+pub async fn find_index_of_non_reversible_migration_async<M>(_migrator: M) -> Option<usize>
 where
     M: MigratorTrait,
 {
