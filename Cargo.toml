@@ -8,7 +8,7 @@ keywords = ["database", "testing", "test", "sea-orm", "sea_orm"]
 categories = ["database", "development-tools::testing"]
 authors = ["josephlenton@gmail.com <josephlenton@gmail.com>"]
 repository = "https://github.com/JosephLenton/assert-migrator-reversible"
-readme = "https://github.com/JosephLenton/assert-migrator-reversible#readme"
+readme = "README.md"
 documentation = "docs.rs/assert-migrator-reversible/latest/assert-migrator-reversible"
 
 [features]
