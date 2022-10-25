@@ -1,4 +1,6 @@
 use ::sea_orm_migration::prelude::MigratorTrait;
+
+#[cfg(feature = "tokio")]
 use ::tokio::runtime::Builder;
 
 use crate::queries::get_table_schemas;
@@ -13,11 +15,13 @@ use crate::queries::TableSchema;
 ///
 /// Note for performance reasons, this works in reverse order of migrations.
 ///
+#[cfg(feature = "tokio")]
 pub fn assert_migrator_is_reversible<M>(migrator: M)
 where
     M: MigratorTrait,
 {
     Builder::new_current_thread()
+        .enable_time()
         .build()
         .expect("Expect to be able to start Tokio runtime for testing")
         .block_on(async move { assert_migrator_is_reversible_async(migrator).await });
@@ -50,11 +54,13 @@ where
  *  - This results in searching in reverse order.
  *
  */
+#[cfg(feature = "tokio")]
 pub fn find_index_of_non_reversible_migration<M>(migrator: M) -> Option<usize>
 where
     M: MigratorTrait,
 {
     Builder::new_current_thread()
+        .enable_time()
         .build()
         .expect("Expect to be able to start Tokio runtime for testing")
         .block_on(async move { find_index_of_non_reversible_migration_async(migrator).await })
