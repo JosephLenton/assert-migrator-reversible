@@ -3,9 +3,8 @@ use ::sea_orm_migration::sea_orm::query::Statement;
 use ::sea_orm_migration::sea_orm::DatabaseBackend;
 use ::sea_orm_migration::sea_orm::DatabaseConnection;
 
-use super::IGNORED_TABLES;
-
 static LIST_TABLES_SQL: &str = &r#"SELECT name, sql FROM sqlite_master WHERE type="table""#;
+static IGNORED_TABLES: [&str; 2] = [&"seaql_migrations", &"sqlite_sequence"];
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct TableSchema {
