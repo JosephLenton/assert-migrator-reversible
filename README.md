@@ -28,3 +28,8 @@ mod test_migrator {
     }
 }
 ```
+
+# Caveats
+
+ * This *only* tests for structural differences. It does not look for data changes.
+ * It uses an in-memeory SQLite database to test the migrator. Any Postgres or MySQL specific features may not work correctly.
