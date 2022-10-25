@@ -16,7 +16,7 @@ use crate::queries::TableSchema;
 /// Note for performance reasons, this works in reverse order of migrations.
 ///
 #[cfg(feature = "tokio")]
-pub fn assert_migrator_is_reversible<M>(migrator: M)
+pub fn assert_migrator_reversible<M>(migrator: M)
 where
     M: MigratorTrait,
 {
@@ -24,10 +24,13 @@ where
         .enable_time()
         .build()
         .expect("Expect to be able to start Tokio runtime for testing")
-        .block_on(async move { assert_migrator_is_reversible_async(migrator).await });
+        .block_on(async move { assert_migrator_reversible_async(migrator).await });
 }
 
-pub async fn assert_migrator_is_reversible_async<M>(migrator: M)
+///
+/// This is an `async` version of `assert_migrator_reversible`.
+///
+pub async fn assert_migrator_reversible_async<M>(migrator: M)
 where
     M: MigratorTrait,
 {
@@ -40,6 +43,8 @@ where
 ///
 /// Returns the index of the first migration it can find, which is not
 /// reversible.
+///
+/// `None` is returned if they are all reversible.
 ///
 /// Note for performance reasons, this will check migrations in reverse order.
 ///
@@ -66,9 +71,9 @@ where
         .block_on(async move { find_index_of_non_reversible_migration_async(migrator).await })
 }
 
+///
 /// This is an `async` version of `find_index_of_non_reversible_migration`.
 ///
-/// This is useful if you have your own async runtime that you wish for this to use.
 pub async fn find_index_of_non_reversible_migration_async<M>(_migrator: M) -> Option<usize>
 where
     M: MigratorTrait,

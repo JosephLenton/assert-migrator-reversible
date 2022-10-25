@@ -1,4 +1,4 @@
-use ::assert_migrator_is_reversible::*;
+use ::assert_migrator_reversible::*;
 use ::panic_message::panic_message;
 use ::std::panic::catch_unwind;
 
@@ -7,13 +7,13 @@ mod example_migrators;
 
 #[test]
 fn it_should_succeed_with_reversible_migrator() {
-    assert_migrator_is_reversible(example_migrators::ExampleWorkingMigrator);
+    assert_migrator_reversible(example_migrators::ExampleWorkingMigrator);
 }
 
 #[test]
 fn it_should_panic_with_broken_migrator() {
     let err = catch_unwind(|| {
-        assert_migrator_is_reversible(example_migrators::ExampleBrokenMigrator);
+        assert_migrator_reversible(example_migrators::ExampleBrokenMigrator);
     })
     .expect_err("Expect an error to have been returned");
 

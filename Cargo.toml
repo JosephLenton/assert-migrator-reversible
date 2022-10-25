@@ -1,15 +1,15 @@
 [package]
-name = "assert-migrator-is-reversible"
-version = "0.1.0"
+name = "assert-migrator-reversible"
+version = "1.0.0"
 edition = "2021"
 license = "MIT"
 description = "For testing if Sea Orm Migrators are reversible"
 keywords = ["database", "testing", "test", "sea-orm", "sea_orm"]
 categories = ["database", "development-tools::testing"]
 authors = ["josephlenton@gmail.com <josephlenton@gmail.com>"]
-repository = "https://github.com/JosephLenton/assert-migrator-is-reversible"
-readme = "https://github.com/JosephLenton/assert-migrator-is-reversible#readme"
-documentation = "docs.rs/assert-migrator-is-reversible/latest/assert-migrator-is-reversible"
+repository = "https://github.com/JosephLenton/assert-migrator-reversible"
+readme = "https://github.com/JosephLenton/assert-migrator-reversible#readme"
+documentation = "docs.rs/assert-migrator-reversible/latest/assert-migrator-reversible"
 
 [features]
 default = ["tokio"]
