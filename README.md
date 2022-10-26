@@ -1,8 +1,11 @@
 <div align="center">
-    <h1>Assert Migrator Reversible (for Sea Orm)</h1>
+  <h1>
+    Assert Migrator Reversible<br>
+    for Sea Orm
+  </h1>
 
-    [![crate](https://img.shields.io/crates/v/assert-migrator-reversible.svg)](https://crates.io/crates/assert-migrator-reversible)
-    [![docs](https://docs.rs/assert-migrator-reversible/badge.svg)](https://docs.rs/assert-migrator-reversible)
+  [![crate](https://img.shields.io/crates/v/assert-migrator-reversible.svg)](https://crates.io/crates/assert-migrator-reversible)
+  [![docs](https://docs.rs/assert-migrator-reversible/badge.svg)](https://docs.rs/assert-migrator-reversible)
 </div>
 
 A crate for testing Sea Orm Migrators. To check if when you call `up` and then `down` on them. They work in both directions.
