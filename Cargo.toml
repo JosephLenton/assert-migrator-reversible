@@ -1,6 +1,6 @@
 [package]
 name = "assert-migrator-reversible"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 license = "MIT"
 description = "For testing if Sea Orm Migrators are reversible"
@@ -12,11 +12,18 @@ readme = "README.md"
 documentation = "https://docs.rs/assert-migrator-reversible/latest/assert-migrator-reversible"
 
 [features]
-default = ["tokio"]
+default = ["tokio", "runtime-tokio-native-tls"]
 tokio = ["dep:tokio"]
 
+runtime-actix-native-tls = ["sea-orm-migration/runtime-actix-native-tls"]
+runtime-actix-rustls = ["sea-orm-migration/runtime-actix-rustls"]
+runtime-async-std-native-tls = ["sea-orm-migration/runtime-async-std-native-tls"]
+runtime-async-std-rustls = ["sea-orm-migration/runtime-async-std-rustls"]
+runtime-tokio-native-tls = ["sea-orm-migration/runtime-tokio-native-tls"]
+runtime-tokio-rustls = ["sea-orm-migration/runtime-tokio-rustls"]
+
 [dependencies]
-sea-orm-migration = { version = "^0.9.0", features = [ "runtime-tokio-rustls", "sqlx-sqlite" ] }
+sea-orm-migration = { version = "^0.9.0", features = ["sqlx-sqlite"] }
 tokio = { version = "^1.21.2", features = ["rt", "time"], optional = true }
 
 [dev-dependencies]
