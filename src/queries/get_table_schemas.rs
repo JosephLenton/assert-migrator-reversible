@@ -3,9 +3,6 @@ use ::sea_orm_migration::sea_orm::query::Statement;
 use ::sea_orm_migration::sea_orm::DatabaseBackend;
 use ::sea_orm_migration::sea_orm::DatabaseConnection;
 
-static LIST_TABLES_SQL: &str = &r#"SELECT name, sql FROM sqlite_master WHERE type="table""#;
-static IGNORED_TABLES: [&str; 2] = [&"seaql_migrations", &"sqlite_sequence"];
-
 #[derive(PartialEq, Debug, Clone)]
 pub struct TableSchema {
     pub name: String,
@@ -13,8 +10,9 @@ pub struct TableSchema {
 }
 
 pub async fn get_table_schemas(db_connection: &DatabaseConnection) -> Vec<TableSchema> {
-    let list_tables_statement =
-        Statement::from_string(DatabaseBackend::Sqlite, LIST_TABLES_SQL.to_string());
+    let db_backend = db_connection.get_database_backend();
+    let sql = get_table_query_sql(db_backend);
+    let list_tables_statement = Statement::from_string(db_backend, sql.to_string());
 
     let table_results = db_connection
         .query_all(list_tables_statement)
@@ -25,16 +23,32 @@ pub async fn get_table_schemas(db_connection: &DatabaseConnection) -> Vec<TableS
         .into_iter()
         .map(|table_result| {
             let name = table_result
-                .try_get::<String>("", "name")
+                .try_get::<String>("", "table_name")
                 .expect("expect name to be present in SQL Query results");
             let schema = table_result
-                .try_get::<String>("", "sql")
+                .try_get::<String>("", "table_sql")
                 .expect("expect name to be present in SQL Query results");
 
             TableSchema { name, schema }
         })
-        .filter(|table_schema| !IGNORED_TABLES.contains(&table_schema.name.as_str()))
         .collect();
 
     table_schemas
+}
+
+fn get_table_query_sql(db_backend: DatabaseBackend) -> &'static str {
+    match db_backend {
+        DatabaseBackend::MySql => unimplemented!("MySql support is not yet implemented"),
+        DatabaseBackend::Postgres => unimplemented!("Postgres support is not yet implemented"),
+        DatabaseBackend::Sqlite => {
+            &r#"
+            SELECT name as table_name, sql as table_sql
+                FROM sqlite_master
+            WHERE
+                type = "table" AND
+                name != "seaql_migrations" AND
+                name != "sqlite_sequence"
+        "#
+        }
+    }
 }
