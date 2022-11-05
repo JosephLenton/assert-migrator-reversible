@@ -1,6 +1,6 @@
 [package]
 name = "assert-migrator-reversible"
-version = "1.1.0"
+version = "2.0.0"
 edition = "2021"
 license = "MIT"
 description = "For testing if Sea Orm Migrators are reversible"
@@ -12,7 +12,7 @@ readme = "README.md"
 documentation = "https://docs.rs/assert-migrator-reversible/latest/assert-migrator-reversible"
 
 [features]
-default = ["tokio", "runtime-tokio-native-tls"]
+default = ["tokio", "runtime-tokio-rustls"]
 tokio = ["dep:tokio"]
 
 runtime-actix-native-tls = ["sea-orm-migration/runtime-actix-native-tls"]
