@@ -12,6 +12,8 @@ A crate for testing Sea Orm Migrators. To check if when you call `up` and then `
 
 It runs your migrations up and down one at a time. Taking a look at the differences it does to a database. Checking if the reverse returns a database into it's previous state.
 
+Supports Postgres and SQLite migrations.
+
 # Example
 
 The most common use case is simply to test if your `Migrator` is reversible.
