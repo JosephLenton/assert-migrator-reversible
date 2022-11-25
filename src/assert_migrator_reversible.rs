@@ -5,10 +5,11 @@ use ::tokio::runtime::Builder;
 #[cfg(feature = "tokio")]
 use ::tokio::runtime::Runtime;
 
+use crate::build_db_connection;
+use crate::DbConnection;
+
 use crate::queries::get_table_schemas;
-use crate::queries::new_test_db_connection;
 use crate::queries::TableSchema;
-use sea_orm_migration::sea_orm::DatabaseConnection;
 
 ///
 /// Runs a given `Migrator` against a new database.
@@ -19,47 +20,22 @@ use sea_orm_migration::sea_orm::DatabaseConnection;
 /// Note for performance reasons, this works in reverse order of migrations.
 ///
 #[cfg(feature = "tokio")]
-pub fn assert_migrator_reversible<M>(migrator: M)
+pub fn assert_migrator_reversible<'a, M>(migrator: M, db_conn: Option<DbConnection<'a>>)
 where
     M: MigratorTrait,
 {
-    build_tokio_runtime().block_on(async move { assert_migrator_reversible_async(migrator).await });
-}
-
-#[cfg(feature = "tokio")]
-pub fn assert_migrator_reversible_with_db<M>(migrator: M, db_connection: &DatabaseConnection)
-where
-    M: MigratorTrait,
-{
-    build_tokio_runtime().block_on(async move {
-        assert_migrator_reversible_async_with_db(migrator, db_connection).await
-    });
+    build_tokio_runtime()
+        .block_on(async move { assert_migrator_reversible_async(migrator, db_conn).await });
 }
 
 ///
 /// This is an `async` version of `assert_migrator_reversible`.
 ///
-pub async fn assert_migrator_reversible_async<M>(migrator: M)
+pub async fn assert_migrator_reversible_async<'a, M>(migrator: M, db_conn: Option<DbConnection<'a>>)
 where
     M: MigratorTrait,
 {
-    let maybe_index = find_index_of_non_reversible_migration_async(migrator).await;
-    if let Some(index) = maybe_index {
-        panic!("Migration at index {} is not reversible", index);
-    }
-}
-
-///
-/// This is an `async` version of `assert_migrator_reversible`.
-///
-pub async fn assert_migrator_reversible_async_with_db<M>(
-    migrator: M,
-    db_connection: &DatabaseConnection,
-) where
-    M: MigratorTrait,
-{
-    let maybe_index =
-        find_index_of_non_reversible_migration_async_with_db(migrator, db_connection).await;
+    let maybe_index = find_index_of_non_reversible_migration_async(migrator, db_conn).await;
     if let Some(index) = maybe_index {
         panic!("Migration at index {} is not reversible", index);
     }
@@ -85,68 +61,49 @@ pub async fn assert_migrator_reversible_async_with_db<M>(
  *
  */
 #[cfg(feature = "tokio")]
-pub fn find_index_of_non_reversible_migration<M>(migrator: M) -> Option<usize>
-where
-    M: MigratorTrait,
-{
-    build_tokio_runtime()
-        .block_on(async move { find_index_of_non_reversible_migration_async(migrator).await })
-}
-
-#[cfg(feature = "tokio")]
-pub fn find_index_of_non_reversible_migration_with_db<M>(
+pub fn find_index_of_non_reversible_migration<'a, M>(
     migrator: M,
-    db_connection: &DatabaseConnection,
+    db_conn: Option<DbConnection<'a>>,
 ) -> Option<usize>
 where
     M: MigratorTrait,
 {
     build_tokio_runtime().block_on(async move {
-        find_index_of_non_reversible_migration_async_with_db(migrator, db_connection).await
+        find_index_of_non_reversible_migration_async(migrator, db_conn).await
     })
 }
 
 ///
 /// This is an `async` version of `find_index_of_non_reversible_migration`.
 ///
-pub async fn find_index_of_non_reversible_migration_async<M>(migrator: M) -> Option<usize>
-where
-    M: MigratorTrait,
-{
-    let db_connection = new_test_db_connection().await;
-    find_index_of_non_reversible_migration_async_with_db(migrator, &db_connection).await
-}
-
-///
-/// This is an `async` version of `find_index_of_non_reversible_migration`.
-///
-pub async fn find_index_of_non_reversible_migration_async_with_db<M>(
+pub async fn find_index_of_non_reversible_migration_async<'a, M>(
     _migrator: M,
-    db_connection: &DatabaseConnection,
+    db_conn: Option<DbConnection<'a>>,
 ) -> Option<usize>
 where
     M: MigratorTrait,
 {
+    let db_connection = build_db_connection(db_conn).await;
     let num_migrations = M::migrations().len();
     let mut migration_step_schemas: Vec<Vec<TableSchema>> = Vec::with_capacity(num_migrations);
 
     // Go up all migrations.
     for _ in 0..num_migrations {
-        let table_schemas = get_table_schemas(db_connection).await;
+        let table_schemas = get_table_schemas(&db_connection).await;
         migration_step_schemas.push(table_schemas);
 
-        <M as MigratorTrait>::up(db_connection, Some(1))
+        <M as MigratorTrait>::up(&db_connection, Some(1))
             .await
             .expect("expect migration up should succeed");
     }
 
     // Go down all migrations.
     for i in 0..num_migrations {
-        <M as MigratorTrait>::down(db_connection, Some(1))
+        <M as MigratorTrait>::down(&db_connection, Some(1))
             .await
             .expect("expect migration down should succeed");
 
-        let down_table_schemas = get_table_schemas(db_connection).await;
+        let down_table_schemas = get_table_schemas(&db_connection).await;
         let up_table_schemas = migration_step_schemas
             .pop()
             .expect("expect up table schemas should exist");

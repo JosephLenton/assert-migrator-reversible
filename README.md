@@ -31,10 +31,12 @@ mod test_migrator {
 
     #[test]
     fn it_should_have_reversible_migrations() {
-        assert_migrator_reversible(Migrator);
+        assert_migrator_reversible(Migrator, None);
     }
 }
 ```
+
+This test will use SQLite by default (that's what passing in `None` does).
 
 ## Example with `tokio::test`
 
@@ -52,15 +54,71 @@ mod test_migrator {
 
     #[tokio::test]
     async fn it_should_have_reversible_migrations() {
-        assert_migrator_reversible_async(Migrator).await
+        assert_migrator_reversible_async(Migrator, None).await
+    }
+}
+```
+
+(Again, this example will use SQLite as it passes in `None`).
+
+## Example using PostgresSQL
+
+Testing against Postgres requires passing in the url to the database.
+It will not be picked up by default from the environment variables.
+You must specify it.
+
+```rust
+#[cfg(test)]
+mod test_migrator {
+    use crate::path::to::my::Migrator;
+    use ::assert_migrator_reversible::assert_migrator_reversible;
+    use ::assert_migrator_reversible::DbConnection;
+
+    const POSTGRES_DB_URL : &'static str = &"postgres://user:password@localhost:5432/my_database";
+
+    #[test]
+    fn it_should_have_reversible_migrations() {
+        let db_conn = Some(DbConnection::Url(POSTGRES_DB_URL));
+        assert_migrator_reversible(Migrator, db_conn);
+    }
+}
+```
+
+## Example using own DatabaseConnection
+
+You can also build your own Sea Orm `DatabaseConnection` object and pass this in for use ...
+
+```rust
+#[cfg(test)]
+mod test_migrator {
+    use crate::path::to::my::Migrator;
+
+    use ::assert_migrator_reversible::assert_migrator_reversible;
+    use ::assert_migrator_reversible::DbConnection;
+
+    use ::sea_orm_migration::sea_orm::Database;
+    use ::sea_orm_migration::sea_orm::DatabaseConnection;
+
+    const POSTGRES_DB_URL : &'static str = &"postgres://user:password@localhost:5432/my_database";
+
+    #[tokio::test]
+    async fn it_should_have_reversible_migrations() {
+        let db_connection = Database::connect(db_url)
+            .await
+            .expect("expect DatabaseConnection to be created");
+
+        let db_conn = Some(DbConnection::DatabaseConnection(db_connection));
+        assert_migrator_reversible_async(Migrator, db_conn).await
     }
 }
 ```
 
 # Caveats
 
- * This *only* tests for structural differences. It does not look for data changes.
- * It uses an in-memeory SQLite database to test the migrator. Any Postgres or MySQL specific features may not work correctly.
+ * This *only* checks DB Table structure changes. It does not look for other changes. Such as data, enums, indexes, sql functions, etc.
+ * The default option is to use an in-memory SQLite database; this is quite limited as lots of features aren't supported.
+ * Testing against Postgres requires spinning up your own Postgres server. This crate will not do that for you.
+ * It does not support MySQL (maybe in the future).
 
 # API
 
@@ -83,3 +141,15 @@ Async versions of those functions are available. This is useful if you wish to _
  * `runtime-async-std-rustls` - Sets Sea-Orm Migrations to use this runtime.
  * `runtime-tokio-native-tls` **Default** - Sets Sea-Orm Migrations to use this runtime.
  * `runtime-tokio-rustls` - Sets Sea-Orm Migrations to use this runtime.
+
+# Local development
+
+To run the tests for this. You will need Docker installed, and to start the Postgres Docker image first.
+
+The exact steps to run the tests are ...
+
+```bash
+./scripts/start-postgres.sh
+cargo test
+./scripts/stop-postgres.sh
+```
