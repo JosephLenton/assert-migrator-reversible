@@ -9,7 +9,9 @@ use crate::build_db_connection;
 use crate::DbConnection;
 
 use crate::queries::get_table_schemas;
+use crate::queries::get_type_schemas;
 use crate::queries::TableSchema;
+use crate::queries::TypeSchema;
 
 ///
 /// Runs a given `Migrator` against a new database.
@@ -86,11 +88,15 @@ where
     let db_connection = build_db_connection(db_conn).await;
     let num_migrations = M::migrations().len();
     let mut migration_step_schemas: Vec<Vec<TableSchema>> = Vec::with_capacity(num_migrations);
+    let mut migration_type_schemas: Vec<Vec<TypeSchema>> = Vec::with_capacity(num_migrations);
 
     // Go up all migrations.
     for _ in 0..num_migrations {
         let table_schemas = get_table_schemas(&db_connection).await;
         migration_step_schemas.push(table_schemas);
+
+        let type_schemas = get_type_schemas(&db_connection).await;
+        migration_type_schemas.push(type_schemas);
 
         <M as MigratorTrait>::up(&db_connection, Some(1))
             .await
@@ -103,12 +109,21 @@ where
             .await
             .expect("expect migration down should succeed");
 
+        // Compare table schema changes
         let down_table_schemas = get_table_schemas(&db_connection).await;
         let up_table_schemas = migration_step_schemas
             .pop()
             .expect("expect up table schemas should exist");
-
         if down_table_schemas != up_table_schemas {
+            return Some(num_migrations - i - 1);
+        }
+
+        // Compare type schema changes
+        let down_type_schemas = get_type_schemas(&db_connection).await;
+        let up_type_schemas = migration_type_schemas
+            .pop()
+            .expect("expect up table schemas should exist");
+        if down_type_schemas != up_type_schemas {
             return Some(num_migrations - i - 1);
         }
     }

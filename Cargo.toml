@@ -1,6 +1,6 @@
 [package]
 name = "assert-migrator-reversible"
-version = "5.0.0"
+version = "6.0.0"
 edition = "2021"
 license = "MIT"
 description = "For testing if Sea Orm Migrators are reversible"
