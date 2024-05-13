@@ -115,6 +115,16 @@ where
             .pop()
             .expect("expect up table schemas should exist");
         if down_table_schemas != up_table_schemas {
+            for i in 0..up_table_schemas.len() {
+                let left = &up_table_schemas[i];
+                let right = &down_table_schemas[i];
+
+                if left != right {
+                    println!("{:#?}", left);
+                    println!("{:#?}", right);
+                    return Some(num_migrations - i - 1);
+                }
+            }
             return Some(num_migrations - i - 1);
         }
 

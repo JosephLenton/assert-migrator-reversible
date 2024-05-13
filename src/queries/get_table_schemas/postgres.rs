@@ -9,7 +9,6 @@ pub const QUERY_TABLE_SCHEMA_SQL: &'static str = &r#"
   SELECT
       table_name,
       column_name,
-      ordinal_position,
       is_nullable,
       data_type,
       character_maximum_length,
@@ -36,7 +35,6 @@ pub const QUERY_TABLE_SCHEMA_SQL: &'static str = &r#"
       scope_schema,
       scope_name,
       maximum_cardinality,
-      dtd_identifier,
       is_self_referencing,
       is_identity,
       identity_generation,
@@ -51,7 +49,7 @@ pub const QUERY_TABLE_SCHEMA_SQL: &'static str = &r#"
   FROM information_schema.columns
   WHERE table_schema not in ('pg_catalog', 'information_schema')
   AND table_name != 'seaql_migrations'
-  ORDER BY table_name, ordinal_position
+  ORDER BY table_name, column_name
 "#;
 
 pub fn build_table_schema(table_results: Vec<QueryResult>) -> Vec<TableSchema> {
@@ -101,7 +99,6 @@ pub fn build_table_schema(table_results: Vec<QueryResult>) -> Vec<TableSchema> {
 ///
 fn collect_table_schema_parts_postgres(dest: &mut String, table_result: QueryResult) {
     add_schema_part::<String>(dest, &table_result, &"column_name");
-    add_schema_part::<i32>(dest, &table_result, &"ordinal_position");
     add_schema_part::<String>(dest, &table_result, &"is_nullable");
     add_schema_part::<String>(dest, &table_result, &"data_type");
     add_schema_part::<Option<i32>>(dest, &table_result, &"character_maximum_length");
@@ -128,7 +125,6 @@ fn collect_table_schema_parts_postgres(dest: &mut String, table_result: QueryRes
     add_schema_part::<Option<String>>(dest, &table_result, &"scope_schema");
     add_schema_part::<Option<String>>(dest, &table_result, &"scope_name");
     add_schema_part::<Option<i32>>(dest, &table_result, &"maximum_cardinality");
-    add_schema_part::<Option<String>>(dest, &table_result, &"dtd_identifier");
     add_schema_part::<Option<String>>(dest, &table_result, &"is_self_referencing");
     add_schema_part::<Option<String>>(dest, &table_result, &"is_identity");
     add_schema_part::<Option<String>>(dest, &table_result, &"identity_generation");

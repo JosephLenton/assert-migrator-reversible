@@ -2,16 +2,31 @@ use ::sea_orm_migration::sea_orm::ConnectionTrait;
 use ::sea_orm_migration::sea_orm::DatabaseBackend;
 use ::sea_orm_migration::sea_orm::QueryResult;
 use ::sea_orm_migration::sea_orm::Statement;
-use ::std::cmp::PartialEq;
+use ::std::cmp::Ordering;
 use ::std::fmt::Debug;
 
 mod postgres;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct TypeSchema {
     pub schema: String,
     pub type_name: String,
     pub enum_value: String,
+}
+
+impl PartialOrd for TypeSchema {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TypeSchema {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.type_name
+            .cmp(&other.type_name)
+            .then_with(|| self.enum_value.cmp(&other.enum_value))
+            .then_with(|| self.schema.cmp(&other.schema))
+    }
 }
 
 pub async fn get_type_schemas<C>(db_connection: &C) -> Vec<TypeSchema>
@@ -27,9 +42,10 @@ where
         .await
         .expect("expect results from listing tables");
 
-    let table_schemas = build_type_schema(db_backend, table_results);
+    let mut type_schemas = build_type_schema(db_backend, table_results);
+    type_schemas.sort();
 
-    table_schemas
+    type_schemas
 }
 
 fn build_type_schema(

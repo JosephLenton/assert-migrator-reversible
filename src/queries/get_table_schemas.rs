@@ -2,16 +2,30 @@ use ::sea_orm_migration::sea_orm::ConnectionTrait;
 use ::sea_orm_migration::sea_orm::DatabaseBackend;
 use ::sea_orm_migration::sea_orm::QueryResult;
 use ::sea_orm_migration::sea_orm::Statement;
-use ::std::cmp::PartialEq;
+use ::std::cmp::Ordering;
 use ::std::fmt::Debug;
 
 mod postgres;
 mod sqlite;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct TableSchema {
     pub name: String,
     pub schema: String,
+}
+
+impl PartialOrd for TableSchema {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TableSchema {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.name
+            .cmp(&other.name)
+            .then_with(|| self.schema.cmp(&other.schema))
+    }
 }
 
 pub async fn get_table_schemas<C>(db_connection: &C) -> Vec<TableSchema>
@@ -27,7 +41,8 @@ where
         .await
         .expect("expect results from listing tables");
 
-    let table_schemas = build_table_schema(db_backend, table_results);
+    let mut table_schemas = build_table_schema(db_backend, table_results);
+    table_schemas.sort();
 
     table_schemas
 }

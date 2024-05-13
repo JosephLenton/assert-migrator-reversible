@@ -1,6 +1,6 @@
 [package]
 name = "assert-migrator-reversible"
-version = "6.0.0"
+version = "6.1.0"
 edition = "2021"
 license = "MIT"
 description = "For testing if Sea Orm Migrators are reversible"
@@ -24,7 +24,7 @@ runtime-tokio-rustls = ["sea-orm-migration/runtime-tokio-rustls"]
 
 [dependencies]
 sea-orm-migration = { version = "0.12", features = ["sqlx-sqlite", "sqlx-postgres"] }
-tokio = { version = "1.31", features = ["rt", "time"], optional = true }
+tokio = { version = "1.37", features = ["rt", "time"], optional = true }
 
 [dev-dependencies]
-panic-message = "0.3.0"
+panic-message = "0.3"
